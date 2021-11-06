@@ -5,7 +5,8 @@ namespace NLox
 {
     class Program
     {
-        static Boolean hadError = false;
+        private static bool hadError = false;
+
         static void Main(string[] args)
         {
             if(args.Length > 1)

@@ -34,7 +34,7 @@ namespace NLox
         {
             while(true)
             {
-                Console.WriteLine("> ");
+                Console.Write("> ");
                 var line = Console.ReadLine();
                 if (line == null) break;
                 Run(line);
@@ -54,7 +54,7 @@ namespace NLox
             }
         }
 
-        static void Error(int line, string message)
+        public static void Error(int line, string message)
         {
             Report(line, "", message);
         }

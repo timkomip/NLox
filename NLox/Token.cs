@@ -36,6 +36,11 @@
         private readonly object literal;
         private readonly int line;
 
+        public TokenType Type => type;
+        public string Lexeme => lexeme;
+        public object Literal => literal;
+        public int Line => line;
+
         public Token(TokenType type, string lexeme, object literal, int line)
         {
             this.type = type;

@@ -47,11 +47,12 @@ namespace NLox
         {
             var scanner = new Scanner(source);
             var tokens = scanner.ScanTokens();
+            var parser = new Parser(tokens);
+            var expr = parser.Parse();
 
-            foreach (var token in tokens)
-            {
-                Console.WriteLine(token);
-            }
+            if (hadError) return;
+
+            Console.WriteLine(new AstPrinter().Print(expr));
         }
 
         public static void Error(int line, string message)
@@ -59,9 +60,22 @@ namespace NLox
             Report(line, "", message);
         }
 
+        public static void Error(Token token, string message)
+        {
+            if (token.Type == TokenType.EOF)
+            {
+                Report(token.Line, " at end", message);
+            }
+            else
+            {
+                Report(token.Line, " at '" + token.Lexeme + "'", message);
+            }
+        }
+
         private static void Report(int line, string where, string message)
         {
             Console.Error.WriteLine($"[line {line}] Error {where}: {message}");
+            hadError = true;
         }
     }
 }

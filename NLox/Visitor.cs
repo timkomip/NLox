@@ -22,10 +22,10 @@ namespace NLox
         {
             return expr switch
             {
-                Binary(Expr left, Token op, Expr right) => Parenthesize(nameof(Binary), left, right),
-                Grouping(Expr expression) => Parenthesize(nameof(Grouping), expression),
-                Literal(Expr expression) => Parenthesize(nameof(Literal), expression),
-                Unary(Token token, Expr expression) => Parenthesize(nameof(Unary), expression),
+                Binary exp => Parenthesize(exp.Op.Lexeme, exp.Left, exp.Right),
+                Grouping exp => Parenthesize("group", exp),
+                Literal exp => exp.Value == null ? "nil" : exp.Value.ToString(),
+                Unary exp => Parenthesize(exp.Op.Lexeme, exp.Right),
                 _ => throw new NotImplementedException(),
             };
         }

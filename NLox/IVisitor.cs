@@ -6,6 +6,6 @@ namespace NLox
 {
     public interface IVisitor<R>
     {
-        R Visit<T>(T expr) where T : Expr;
+        R Visit<T>(T obj);
     }
 }

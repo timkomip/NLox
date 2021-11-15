@@ -6,23 +6,18 @@ using System.Threading.Tasks;
 
 namespace NLox
 {
-    public class RuntimeException : Exception
-    {
-        private readonly Token token;
-
-        public Token Token => token;
-
-        public RuntimeException(Token token, string message) : base(message)
-        {
-            this.token = token;
-        }
-    }
     public class Interpreter : IVisitor<object>
     {
-        public object Visit<T>(T expr) where T : Expr
+        private LoxEnvironment environment = new LoxEnvironment();
+
+        public object Visit<T>(T expr)
         {
             return expr switch
             {
+                ExpressionStmt stmt => Evaluate(stmt.Expr),
+                PrintStmt stmt => VisitPrintStmt(stmt),
+                VarStmt stmt => VisitVarStmt(stmt),
+                Variable exp => environment.Get(exp.Name),
                 Literal exp => exp.Value,
                 Grouping exp => Evaluate(exp.Expression),
                 Unary exp => VisitUnary(exp),
@@ -31,17 +26,18 @@ namespace NLox
             };
         }
 
-        public string Interpret(Expr expression)
+        public void Interpret(IList<Stmt> statements)
         {
             try
             {
-                var value = Evaluate(expression);
-                return Stringify(value);
+                foreach (var statement in statements)
+                {
+                    Execute(statement);
+                }
             }
             catch (RuntimeException error)
             {
                 Program.RuntimeError(error);
-                return null;
             }
         }
 
@@ -63,7 +59,27 @@ namespace NLox
             return obj.ToString();
         }
 
+        private void Execute(Stmt stmt) => stmt.Accept(this);
         private object Evaluate(Expr expr) => expr.Accept(this);
+
+        private object VisitVarStmt(VarStmt stmt)
+        {
+            object value = null;
+            if (stmt.Initializer != null)
+            {
+                value = Evaluate(stmt.Initializer);
+            }
+
+            environment.Define(stmt.Name.Lexeme, value);
+            return null;
+        }
+
+        private object VisitPrintStmt(PrintStmt stmt)
+        {
+            var value = Evaluate(stmt.Expr);
+            Console.WriteLine(value);
+            return null;
+        }
 
         private object VisitUnary(Unary expr)
         {

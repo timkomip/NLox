@@ -55,7 +55,7 @@ namespace NLox
 
             if (hadError) return;
 
-            Console.WriteLine(interpreter.Interpret(expr));
+            interpreter.Interpret(expr);
         }
 
         public static void Error(int line, string message)

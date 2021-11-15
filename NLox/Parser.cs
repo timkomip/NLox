@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 
 namespace NLox
 {
-    public class ParseException : Exception { }
-
     public class Parser
     {
         private readonly IList<Token> tokens;
@@ -18,16 +16,64 @@ namespace NLox
             this.tokens = tokens;
         }
 
-        public Expr Parse()
+        public IList<Stmt> Parse()
+        {
+            var statements = new List<Stmt>();
+            while (!IsAtEnd)
+            {
+                statements.Add(Declaration());
+            }
+
+            return statements;
+        }
+
+        private Stmt Declaration()
         {
             try
             {
-                return Expression();
+                if (Match(TokenType.Var)) return VarDeclaration();
+
+                return Statement();
             }
             catch (ParseException e)
             {
+                Synchronize();
                 return null;
             }
+        }
+
+        private Stmt VarDeclaration()
+        {
+            var name = Consume(TokenType.Identifier, "Expect variable name.");
+
+            Expr initializer = null;
+            if (Match(TokenType.Equal))
+            {
+                initializer = Expression();
+            }
+
+            Consume(TokenType.Semicolon, "Expect ';' after variable declartion.");
+            return new VarStmt(name, initializer);
+        }
+
+        private Stmt Statement()
+        {
+            if (Match(TokenType.Print)) return PrintStatement();
+            return ExpressionStatement();
+        }
+
+        private Stmt PrintStatement()
+        {
+            var value = Expression();
+            Consume(TokenType.Semicolon, "Expect ';' after value.");
+            return new PrintStmt(value);
+        }
+
+        private Stmt ExpressionStatement()
+        {
+            var value = Expression();
+            Consume(TokenType.Semicolon, "Expect ';' after expression.");
+            return new ExpressionStmt(value);
         }
 
         private Expr Expression()
@@ -140,6 +186,8 @@ namespace NLox
             if (Match(TokenType.Nil)) return new Literal(null);
 
             if (Match(TokenType.Number, TokenType.String)) return new Literal(Previous().Literal);
+
+            if (Match(TokenType.Identifier)) return new Variable(Previous());
 
             if (Match(TokenType.LeftParen))
             {

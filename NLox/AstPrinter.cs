@@ -10,7 +10,7 @@ namespace NLox
             return expr.Accept(this);
         }
 
-        public string Visit<T>(T expr) where T : Expr
+        public string Visit<T>(T expr)
         {
             return expr switch
             {

@@ -6,6 +6,8 @@ namespace NLox
     class Program
     {
         private static bool hadError = false;
+        private static bool hadRuntimeError = false;
+        private static Interpreter interpreter = new Interpreter();
 
         static void Main(string[] args)
         {
@@ -28,6 +30,7 @@ namespace NLox
         {
             Run(File.ReadAllText(path));
             if (hadError) Environment.Exit(65);
+            if (hadRuntimeError) Environment.Exit(70);
         }
 
         private static void RunPrompt()
@@ -52,7 +55,7 @@ namespace NLox
 
             if (hadError) return;
 
-            Console.WriteLine(new AstPrinter().Print(expr));
+            Console.WriteLine(interpreter.Interpret(expr));
         }
 
         public static void Error(int line, string message)
@@ -72,10 +75,17 @@ namespace NLox
             }
         }
 
+        public static void RuntimeError(RuntimeException error)
+        {
+            Console.Error.WriteLine($"{error.Message}\n[line {error.Token.Line}]");
+            hadRuntimeError = true;
+        }
+
         private static void Report(int line, string where, string message)
         {
             Console.Error.WriteLine($"[line {line}] Error {where}: {message}");
             hadError = true;
         }
+
     }
 }

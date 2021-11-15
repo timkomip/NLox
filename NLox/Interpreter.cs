@@ -17,6 +17,7 @@ namespace NLox
                 ExpressionStmt stmt => Evaluate(stmt.Expr),
                 PrintStmt stmt => VisitPrintStmt(stmt),
                 VarStmt stmt => VisitVarStmt(stmt),
+                BlockStmt stmt => VisitBlockStmt(stmt),
                 Variable exp => environment.Get(exp.Name),
                 Assign exp => VisitAssignExpr(exp),
                 Literal exp => exp.Value,
@@ -60,9 +61,6 @@ namespace NLox
             return obj.ToString();
         }
 
-        private void Execute(Stmt stmt) => stmt.Accept(this);
-        private object Evaluate(Expr expr) => expr.Accept(this);
-
         private object VisitVarStmt(VarStmt stmt)
         {
             object value = null;
@@ -72,6 +70,12 @@ namespace NLox
             }
 
             environment.Define(stmt.Name.Lexeme, value);
+            return null;
+        }
+        
+        private object VisitBlockStmt(BlockStmt stmt)
+        {
+            ExecuteBlock(stmt.Statements, new LoxEnvironment(environment));
             return null;
         }
 
@@ -159,6 +163,28 @@ namespace NLox
                 },
                 _ => null
             };
+        }
+
+        private void Execute(Stmt stmt) => stmt.Accept(this);
+        private object Evaluate(Expr expr) => expr.Accept(this);
+
+        private void ExecuteBlock(IList<Stmt> statements, LoxEnvironment environment)
+        {
+            var previous = this.environment;
+
+            try
+            {
+                this.environment = environment;
+
+                foreach (var stmt in statements)
+                {
+                    Execute(stmt);
+                }
+            } 
+            finally
+            {
+                this.environment = previous;
+            }
         }
 
         private bool IsTruthy(object obj)

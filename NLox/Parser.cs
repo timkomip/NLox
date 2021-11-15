@@ -78,7 +78,28 @@ namespace NLox
 
         private Expr Expression()
         {
-            return Equality();
+            return Assignment();
+        }
+
+        private Expr Assignment()
+        {
+            var expr = Equality();
+
+            if (Match(TokenType.Equal))
+            {
+                var equals = Previous();
+                var value = Assignment();
+
+                if (expr is Variable varExpr)
+                {
+                    var name = varExpr.Name;
+                    return new Assign(name, value);
+                }
+
+                Error(equals, "Invalid assignment target.");
+            }
+
+            return expr;
         }
 
         private Expr Equality()

@@ -18,6 +18,7 @@ namespace NLox
                 PrintStmt stmt => VisitPrintStmt(stmt),
                 VarStmt stmt => VisitVarStmt(stmt),
                 Variable exp => environment.Get(exp.Name),
+                Assign exp => VisitAssignExpr(exp),
                 Literal exp => exp.Value,
                 Grouping exp => Evaluate(exp.Expression),
                 Unary exp => VisitUnary(exp),
@@ -79,6 +80,13 @@ namespace NLox
             var value = Evaluate(stmt.Expr);
             Console.WriteLine(value);
             return null;
+        }
+
+        private object VisitAssignExpr(Assign exp)
+        {
+            var value = Evaluate(exp.Value);
+            environment.Assign(exp.Name, value);
+            return value;
         }
 
         private object VisitUnary(Unary expr)

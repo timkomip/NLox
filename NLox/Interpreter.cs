@@ -18,12 +18,15 @@ namespace NLox
                 PrintStmt stmt => VisitPrintStmt(stmt),
                 VarStmt stmt => VisitVarStmt(stmt),
                 BlockStmt stmt => VisitBlockStmt(stmt),
+                IfStmt stmt => VisitIfStmt(stmt),
+                WhileStmt stmt => VisitWhileStmt(stmt),
                 Variable exp => environment.Get(exp.Name),
                 Assign exp => VisitAssignExpr(exp),
                 Literal exp => exp.Value,
                 Grouping exp => Evaluate(exp.Expression),
                 Unary exp => VisitUnary(exp),
                 Binary exp => VisitBinary(exp),
+                Logical exp => VisitLogicalExpr(exp),
                 _ => throw new NotImplementedException()
             };
         }
@@ -76,6 +79,30 @@ namespace NLox
         private object VisitBlockStmt(BlockStmt stmt)
         {
             ExecuteBlock(stmt.Statements, new LoxEnvironment(environment));
+            return null;
+        }
+
+        private object VisitIfStmt(IfStmt stmt)
+        {
+            if (IsTruthy(Evaluate(stmt.Condition)))
+            {
+                Execute(stmt.ThenBranch);
+            }
+            else if (stmt.ElseBranch != null)
+            {
+                Execute(stmt.ElseBranch);
+            }
+
+            return null;
+        }
+
+        private object VisitWhileStmt(WhileStmt stmt)
+        {
+            while(IsTruthy(Evaluate(stmt.Condition)))
+            {
+                Execute(stmt.Body);
+            }
+
             return null;
         }
 
@@ -163,6 +190,22 @@ namespace NLox
                 },
                 _ => null
             };
+        }
+
+        private object VisitLogicalExpr(Logical exp)
+        {
+            var left = Evaluate(exp.Left);
+
+            if (exp.Op.Type == TokenType.Or)
+            {
+                if (IsTruthy(left)) return left;
+            }
+            else
+            {
+                if (!IsTruthy(left)) return left;
+            }
+
+            return Evaluate(exp.Right);
         }
 
         private void Execute(Stmt stmt) => stmt.Accept(this);

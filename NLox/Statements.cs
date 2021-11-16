@@ -14,7 +14,8 @@ namespace NLox
         }
     };
     public record ExpressionStmt(Expr Expr) : Stmt;
-    public record PrintStmt(Expr Expr): Stmt;
-    public record VarStmt(Token Name, Expr Initializer) : Stmt;
+    public record PrintStmt(Expr Expr): Stmt; public record VarStmt(Token Name, Expr Initializer) : Stmt;
     public record BlockStmt(IList<Stmt> Statements) : Stmt;
+    public record IfStmt(Expr Condition, Stmt ThenBranch, Stmt ElseBranch) : Stmt;
+    public record WhileStmt(Expr Condition, Stmt Body) : Stmt;
 } 

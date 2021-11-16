@@ -58,9 +58,28 @@ namespace NLox
 
         private Stmt Statement()
         {
+            if (Match(TokenType.If)) return IfStatement();
             if (Match(TokenType.Print)) return PrintStatement();
+            if (Match(TokenType.While)) return WhileStatement();
             if (Match(TokenType.LeftBrace)) return new BlockStmt(Block());
             return ExpressionStatement();
+        }
+
+        private Stmt IfStatement()
+        {
+            Consume(TokenType.LeftParen, "Expect '(' after 'if'.");
+            var condition = Expression();
+            Consume(TokenType.RightParen, "Expect ')' after if condition.");
+
+            var thenBranch = Statement();
+            Stmt elseBranch = null;
+
+            if (Match(TokenType.Else))
+            {
+                elseBranch = Statement();
+            }
+
+            return new IfStmt(condition, thenBranch, elseBranch);
         }
 
         private Stmt PrintStatement()
@@ -68,6 +87,16 @@ namespace NLox
             var value = Expression();
             Consume(TokenType.Semicolon, "Expect ';' after value.");
             return new PrintStmt(value);
+        }
+
+        private Stmt WhileStatement()
+        {
+            Consume(TokenType.LeftParen, "Expect '(' after 'while'.");
+            var condition = Expression();
+            Consume(TokenType.RightParen, "Expect ')' after if condition.");
+            var body = Statement();
+
+            return new WhileStmt(condition, body);
         }
 
         private Stmt ExpressionStatement()
@@ -97,7 +126,7 @@ namespace NLox
 
         private Expr Assignment()
         {
-            var expr = Equality();
+            var expr = Or();
 
             if (Match(TokenType.Equal))
             {
@@ -111,6 +140,34 @@ namespace NLox
                 }
 
                 Error(equals, "Invalid assignment target.");
+            }
+
+            return expr;
+        }
+
+        private Expr Or()
+        {
+            Expr expr = And();
+
+            while (Match(TokenType.Or))
+            {
+                var op = Previous();
+                var right = And();
+                expr = new Logical(expr, op, right);
+            }
+
+            return expr;
+        }
+
+        private Expr And()
+        {
+            var expr = Equality();
+
+            while (Match(TokenType.And))
+            {
+                var op = Previous();
+                var right = Equality();
+                expr = new Logical(expr, op, right);
             }
 
             return expr;

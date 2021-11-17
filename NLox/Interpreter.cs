@@ -8,7 +8,25 @@ namespace NLox
 {
     public class Interpreter : IVisitor<object>
     {
-        private LoxEnvironment environment = new LoxEnvironment();
+        private LoxEnvironment globals;
+        private LoxEnvironment environment;
+
+        public Interpreter()
+        {
+            globals = new LoxEnvironment();
+            environment = globals;
+
+            globals.Define("clock", new CallableFunc((interpreter, arguments) => 
+            {
+                return DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+            }, 0));
+            
+            globals.Define("uppercase", new CallableFunc((interpreter, arguments) => 
+            {
+                var arg = arguments.FirstOrDefault();
+                return arg is string str ? str.ToUpper() : null;
+            }, 1));
+        }
 
         public object Visit<T>(T expr)
         {
@@ -27,6 +45,7 @@ namespace NLox
                 Unary exp => VisitUnary(exp),
                 Binary exp => VisitBinary(exp),
                 Logical exp => VisitLogicalExpr(exp),
+                Call exp => VisitCallExpr(exp),
                 _ => throw new NotImplementedException()
             };
         }
@@ -206,6 +225,29 @@ namespace NLox
             }
 
             return Evaluate(exp.Right);
+        }
+
+        private object VisitCallExpr(Call exp)
+        {
+            var callee = Evaluate(exp.Callee);
+
+            var arguments = new List<object>();
+            foreach (var arg in exp.Arguments)
+            {
+                arguments.Add(Evaluate(arg));
+            }
+
+            if (callee is ICallable function)
+            {
+                if (arguments.Count != function.Arity) throw new RuntimeException(
+                    exp.Paren,
+                    $"Expected {function.Arity} arguments but got {arguments.Count}");
+                return function.Call(this, arguments);
+            }
+
+            throw new RuntimeException(
+                exp.Paren,
+                "Can only call functions and classes.");
         }
 
         private void Execute(Stmt stmt) => stmt.Accept(this);

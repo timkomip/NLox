@@ -11,6 +11,9 @@ namespace NLox
         private LoxEnvironment globals;
         private LoxEnvironment environment;
 
+        public LoxEnvironment Globals => globals;
+        public LoxEnvironment Environment => environment;
+
         public Interpreter()
         {
             globals = new LoxEnvironment();
@@ -36,6 +39,7 @@ namespace NLox
                 PrintStmt stmt => VisitPrintStmt(stmt),
                 VarStmt stmt => VisitVarStmt(stmt),
                 BlockStmt stmt => VisitBlockStmt(stmt),
+                FunctionStmt stmt => VisitFunctionStmt(stmt),
                 IfStmt stmt => VisitIfStmt(stmt),
                 WhileStmt stmt => VisitWhileStmt(stmt),
                 Variable exp => environment.Get(exp.Name),
@@ -129,6 +133,13 @@ namespace NLox
         {
             var value = Evaluate(stmt.Expr);
             Console.WriteLine(value);
+            return null;
+        }
+
+        private object VisitFunctionStmt(FunctionStmt stmt)
+        {
+            var func = new CallableFunc(stmt);
+            environment.Define(stmt.Name.Lexeme, func);
             return null;
         }
 
@@ -253,7 +264,7 @@ namespace NLox
         private void Execute(Stmt stmt) => stmt.Accept(this);
         private object Evaluate(Expr expr) => expr.Accept(this);
 
-        private void ExecuteBlock(IList<Stmt> statements, LoxEnvironment environment)
+        public void ExecuteBlock(IList<Stmt> statements, LoxEnvironment environment)
         {
             var previous = this.environment;
 
